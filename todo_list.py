@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+import datetime
+import time
 
 top = tk.Tk()
 top.geometry("800x400")
@@ -16,14 +18,14 @@ top.resizable(True, True)
 
 font_size = 20
 font_name = "calibri"	
-
+title = "| {} |".format(datetime.date.today())
 	
 class TodoApp:
 	def __init__(self,top):
 		self.rows = []
 		self.top = top
 		self.frame = tk.Frame(self.top)
-		self.app_label = tk.Label(self.top, text = "todo app", bg="black", \
+		self.app_label = tk.Label(self.top, text = title, bg="black", \
 		 justify="center",font=(font_name, font_size))
 		self.app_label.pack()
 		self.ent1 = tk.Label(self.frame, text="task", borderwidth=20, relief="solid", width=20, anchor="center")
@@ -39,6 +41,7 @@ class TodoApp:
 		self.frame.grid_rowconfigure(0, weight=1)
 		self.add_button = tk.Button(self.top, text="add task", relief="flat", bd=0, command=self.add_task)
 		self.add_button.pack(pady=10)
+		self.update_time()
 		
 	def add_task(self):
 		row_count = len(self.rows)
@@ -63,6 +66,18 @@ class TodoApp:
 			self.rows[r][1].config(state='normal')
 			self.rows[r][0].bind("<KeyPress>", lambda e: "break")  # Disable typing in task
 			self.rows[r][1].bind("<KeyPress>", lambda e: "break")  # Disable typing in ETA
+
+
+	def get_time(self):
+		"""Get the current time in HH:MM:SS format."""
+		return time.strftime("%H:%M:%S")
+
+	def update_time(self):
+		"""Update the time on the app_label every second."""
+		current_time = self.get_time()  # Get the current time
+		# Update the label with the title and current time
+		self.app_label.config(text=f"{title} {current_time} |")
+		self.app_label.after(1000, self.update_time)  # Update every second (1000 ms)
  
 
 def main():

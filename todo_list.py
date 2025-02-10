@@ -2,8 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 import datetime
 import time
+import os
 
 top = tk.Tk()
+cwd = os.getcwd()
+path = "{}/tk.png".format(cwd)
+photo = tk.PhotoImage(file = path)
+top.wm_iconphoto(False, photo)
 top.geometry("800x400")
 top.title("TodoList App")
 top.configure(bg='black')

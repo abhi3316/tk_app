@@ -81,7 +81,7 @@ class TodoApp:
 		"""Update the time on the app_label every second."""
 		current_time = self.get_time()  # Get the current time
 		# Update the label with the title and current time
-		self.app_label.config(text=f"{title} {current_time} |")
+		self.app_label.config(text=f"{title} {current_time} |", fg="white")
 		self.app_label.after(1000, self.update_time)  # Update every second (1000 ms)
  
 

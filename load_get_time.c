@@ -7,10 +7,11 @@
 //tk_app --> socket --> load_get_time() --> timer --> socket --> tk_app()
 
 #include <stdio.h>
-//#include <socket.h>
+#include <sys/un.h>
+#include <sys/socket.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <string.h>
 
 #define TASK_NAME_CNT (50) /*tk_app also should be aware of this */
 
@@ -39,13 +40,6 @@ struct time {
 
 };
 
-//Task status ds for the tk_app to monitor the task status
-struct task_status {
-	char *t_name; /* Task name */
-	unsigned int t_id; /* Task id */
-	unsigned int completion; /* Task Completion Status */
-	t_status status; /* Task status */		
-};
 
 //Struct to hold the start time, end time and the current time.
 struct task_timer {
@@ -56,11 +50,26 @@ struct task_timer {
 
 };
 
+//Task status ds for the tk_app to monitor the task status
+struct task_status {
+	char *t_name; /* Task name */
+	unsigned int t_id; /* Task id */
+	unsigned int completion; /* Task Completion Status */
+	t_status status; /* Task status */		
+    struct task_timer timer_val; /* stores all the time */
+};
+
+//Link list of the task node.
+struct task_node {
+    unsigned int tnode; /*index of the task node */
+    struct task_status tstaus;
+};
+
 /* tk_app to the engine */
-struct tk_app_eng {
+struct tk_app_to_eng {
 	char name[TASK_NAME_CNT]; /* should match with the tk_app task_name_cnt */
 	struct task_timer timer; /* Need the time */
-	
+	void *prv_data; /* Start the development with void * and add on the members based on req */ 
 };
 	
 
@@ -68,16 +77,63 @@ struct tk_app_eng {
 struct tk_app_payload {
 	unsigned int req_id:8; /* will repeat after 255 */
 	tk_cmd cmd;
-	/* Struct for the tk_app to the communicate with the engine */
+	struct tk_app_to_eng tk_to_eng; /* Struct for the tk_app to the communicate with the engine */
 	/* Struct for the engine to talk with the tk_app */
 	
 };
 
 int log_val = 255;
 
-#define print_fn(x)\
-	if (log_val < 4) \
-		printf(x);
+#define print_fn(val, x)\
+	if (val < 4) \
+		printf(x);\
+    printf("\n");
+
+#define p_e(x)\
+    print_fn(0, x);
+
+#define p_i(x)\
+    print_fn(5, x);
+
+typedef struct {
+    unsigned int sockfd; /* Sockfd to store the unix socket */
+    /* add mutex lock to the task_timer*/
+}app_data;
+
+#define UPATH "/tmp/unix_socket_example"
+
+int create_socket(app_data *adata) {
+    if(!adata) {
+        p_e("app data null");
+        return -1;
+    
+    }
+    
+    int success = 0;
+    int server_sock = 0;
+    struct sockaddr_un addr;
+    /* Create a socket */
+    
+    server_sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    
+    if(server_sock == -1) {
+        p_e("Error in creating socket");
+        return -1;
+        
+    }
+
+    memset(&addr, 0, sizeof(struct sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, UPATH, sizeof(addr.sun_path) - 1);
+    unlink(UPATH); // Remove previous socket if it exists
+    if (bind(server_sock, (struct sockaddr *)&addr, sizeof(struct sockaddr_un)) == -1) {
+        p_e("bind failed");
+        return -1;
+    
+    }
+
+    return success;
+}
 
 int main(int argc, char **argv) {
 	int opt = 0;	
@@ -92,7 +148,6 @@ int main(int argc, char **argv) {
 
 	}
 
-	print_fn("The Code is completed\n");
 	return 0;
 
 }
